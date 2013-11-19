@@ -268,10 +268,6 @@ public class Utils {
 				if (getDistance(point, trooper) > game.getCommanderAuraRange()) {
 					return false;
 				}
-			} else {
-				if (getDistance(commander, trooper) > game.getCommanderAuraRange()) {
-					return false;
-				}
 			}
 		}
 		return result;
@@ -352,6 +348,65 @@ public class Utils {
 			}
 		}
 		return target;
+	}
+
+	public static boolean trooperCanMoveToTarget(Trooper self, World world, Game game, Trooper trooper, Point target) {
+		Point next = Utils.nextPointToTarget(world, trooper, target);
+		if (next != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static Point getNextPointToMove(Trooper trooper, World world, Game game, Point point) {
+		Point next = Utils.nextPointToTarget(world, trooper, point);
+		if (next != null && Utils.isCellFree(next, world) && Utils.ensureCommandBonus(trooper, world, game, next)) {
+			return next;
+		} else {
+			if (Math.abs(trooper.getX() - point.getX()) > Math.abs(trooper.getY() - point.getY())) {
+				return getNextPointX(trooper, world, point, 0);
+			} else {
+				return getNextPointY(trooper, world, point, 0);
+			}
+		}
+	}
+
+	public static Point getNextPointX(Trooper trooper, World world, Point point, int count) {
+		if (trooper.getX() - point.getX() > 0) {
+			if (Utils.isCellFree(trooper.getX() - 1, trooper.getY(), world) || count > 1) {
+				return new Point(trooper.getX() - 1, trooper.getY());
+			} else {
+				return getNextPointY(trooper, world, point, count + 1);
+			}
+		} else {
+			if (Utils.isCellFree(trooper.getX() + 1, trooper.getY(), world) || count > 1) {
+				return new Point(trooper.getX() + 1, trooper.getY());
+			} else {
+				return getNextPointY(trooper, world, point, count + 1);
+			}
+		}
+	}
+
+	public static Point getNextPointY(Trooper trooper, World world, Point point, int count) {
+		if (trooper.getY() - point.getY() > 0) {
+			if (Utils.isCellFree(trooper.getX(), trooper.getY() - 1, world) || count > 1) {
+				return new Point(trooper.getX(), trooper.getY() - 1);
+			} else {
+				return getNextPointX(trooper, world, point, count + 1);
+			}
+		} else {
+			if (Utils.isCellFree(trooper.getX(), trooper.getY() + 1, world) || count > 1) {
+				return new Point(trooper.getX(), trooper.getY() + 1);
+			} else {
+				return getNextPointX(trooper, world, point, count + 1);
+			}
+		}
+	}
+
+	public static Point getNearestFreeCell(Trooper self, World world, Game game, Point point) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

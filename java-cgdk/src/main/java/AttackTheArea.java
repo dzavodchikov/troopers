@@ -75,7 +75,7 @@ public class AttackTheArea implements ITeamStrategy {
 				}
 			} else {
 				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
-				if (commander != null) {
+				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
 					actionChain.chain(new TryMove(commander));
 				} else {
 					actionChain.chain(new TryMove(areaCenterPoint));
@@ -88,7 +88,7 @@ public class AttackTheArea implements ITeamStrategy {
 				actionChain.chain(new TryMove(nearestEnemy));
 			} else {
 				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
-				if (commander != null) {
+				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
 					actionChain.chain(new TryMove(commander));
 				} else {
 					actionChain.chain(new TryMove(areaCenterPoint));
