@@ -48,9 +48,7 @@ public class AttackTheArea implements ITeamStrategy {
 					actionChain.chain(new EndTurn());
 				}
 			}
-		} else {
-			actionChain.chain(new TryWaitMedic());
-		}
+		} 
 		
 		actionChain.chain(new TryUp());
 		
@@ -63,20 +61,9 @@ public class AttackTheArea implements ITeamStrategy {
 			List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
 			Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
 			if (nearestEnemy != null) {
-				Point enemyPoint = new Point(nearestEnemy.getX(), nearestEnemy.getY());
-				Point nextPoint = getNextPointToMove(self, world, game, move, enemyPoint);
-				if (Utils.ensureCommandBonus(self, world, game, nextPoint)) {
-					actionChain.chain(new TryMove(nextPoint));
-				} else {
-					actionChain.chain(new EndTurn());
-				}
+				actionChain.chain(new EndTurn());
 			} else {
-				Point nextPoint = getNextPointToMove(self, world, game, move, areaCenterPoint);
-				if (Utils.ensureCommandBonus(self, world, game, nextPoint)) {
-					actionChain.chain(new TryMove(nextPoint));
-				} else {
-					actionChain.chain(new EndTurn());
-				}
+				actionChain.chain(new TryMove(areaCenterPoint));
 			}
 		} else if (self.getType() == TrooperType.FIELD_MEDIC) {
 			Trooper damagedTrooper = Utils.getDamagedTrooper(world, self);
@@ -84,88 +71,34 @@ public class AttackTheArea implements ITeamStrategy {
 				if (Utils.trooperIsNear(damagedTrooper, self)) {
 					actionChain.chain(new TryHeal(damagedTrooper));
 				} else {
-					Point damagedPoint = new Point(damagedTrooper.getX(), damagedTrooper.getY());
-					Point nextPoint = getNextPointToMove(self, world, game, move, damagedPoint);
-					actionChain.chain(new TryMove(nextPoint));
+					actionChain.chain(new TryMove(damagedTrooper));
 				}
 			} else {
 				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
 				if (commander != null) {
-					Point commanderPoint = new Point(commander.getX(), commander.getY());
-					Point nextPoint = getNextPointToMove(self, world, game, move, commanderPoint);
-					actionChain.chain(new TryMove(nextPoint));
+					actionChain.chain(new TryMove(commander));
 				} else {
-					Point nextPoint = getNextPointToMove(self, world, game, move, areaCenterPoint);
-					actionChain.chain(new TryMove(nextPoint));
+					actionChain.chain(new TryMove(areaCenterPoint));
 				}
 			}
 		} else {
-			Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
-			if (commander != null) {
-				Point commanderPoint = new Point(commander.getX(), commander.getY());
-				Point nextPoint = getNextPointToMove(self, world, game, move, commanderPoint);
-				actionChain.chain(new TryMove(nextPoint));
+			List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
+			Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
+			if (nearestEnemy != null) {
+				actionChain.chain(new TryMove(nearestEnemy));
 			} else {
-				Point nextPoint = getNextPointToMove(self, world, game, move, areaCenterPoint);
-				actionChain.chain(new TryMove(nextPoint));
+				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
+				if (commander != null) {
+					actionChain.chain(new TryMove(commander));
+				} else {
+					actionChain.chain(new TryMove(areaCenterPoint));
+				}
 			}
 		}
 		
 		actionChain.chain(new EndTurn());
-		
 		actionChain.execute();
 		
-	}
-
-	private Point getNextPointToMove(Trooper self, World world, Game game, Move move, Point point) {
-		Point next = Utils.nextPointToTarget(world, self, point);
-		if (next != null && Utils.isCellFree(next, world)) {
-			lockedTroopers.put(self.getType(), false);
-			return next;
-		} else {
-			Point free = Utils.nextPointToTarget(world, self, areaCenterPoint);
-			if (free == null || !Utils.isCellFree(free, world)) {
-				lockedTroopers.put(self.getType(), true);
-			}
-			if (Math.abs(self.getX() - point.getX()) > Math.abs(self.getY() - point.getY())) {
-				return getNextPointX(self, move, world, point, 0);
-			} else {
-				return getNextPointY(self, move, world, point, 0);
-			}
-		}
-			
-	}
-
-	private Point getNextPointX(Trooper self, Move move, World world, Point point, int count) {
-		if (self.getX() - point.getX() > 0) {
-			if (Utils.isCellFree(self.getX() - 1, self.getY(), world) || count > 1) {
-				return new Point(self.getX() - 1, self.getY());
-			} else {
-				return getNextPointY(self, move, world, point, count + 1);
-			}
-		} else {
-			if (Utils.isCellFree(self.getX() + 1, self.getY(), world) || count > 1) {
-				return new Point(self.getX() + 1, self.getY());
-			} else {
-				return getNextPointY(self, move, world, point, count + 1);
-			}
-		}
-	}
-
-	private Point getNextPointY(Trooper self, Move move, World world, Point point, int count) {
-		if (self.getY() - point.getY() > 0) {
-			if (Utils.isCellFree(self.getX(), self.getY() - 1, world) || count > 1) {
-				return new Point(self.getX(), self.getY() - 1);
-			} else {
-				return getNextPointX(self, move, world, point, count + 1);
-			}
-		} else {
-			if (Utils.isCellFree(self.getX(), self.getY() + 1, world) || count > 1) {
-				return new Point(self.getX(), self.getY() + 1);
-			} else {
-				return getNextPointX(self, move, world, point, count + 1);
-			}
-		}
 	}
 
 	private boolean allTroopersInArea(Trooper self, World world, Game game, Move move) {

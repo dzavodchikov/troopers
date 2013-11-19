@@ -16,6 +16,14 @@ public class TryHeal implements IAction {
 	
 	@Override
 	public boolean run(Trooper self, World world, Game game, Move move) {
+		if (damagedTrooper.getHitpoints() <= 70 
+				&& self.getActionPoints() >= game.getMedikitUseCost()
+				&& self.isHoldingMedikit()) {
+			move.setAction(ActionType.USE_MEDIKIT);
+			move.setX(damagedTrooper.getX());
+			move.setY(damagedTrooper.getY());
+			return true;
+		}
 		if (self.getActionPoints() >= game.getFieldMedicHealCost()) {
 			move.setAction(ActionType.HEAL);
 			move.setX(damagedTrooper.getX());
