@@ -3,7 +3,9 @@
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import model.Bonus;
 import model.CellType;
@@ -46,7 +48,7 @@ public class Utils {
 			TrooperType.SNIPER, TrooperType.SOLDIER, TrooperType.FIELD_MEDIC};
 		
 		for (TrooperType trooperType : typesOrder) {
-			Trooper trooper = Utils.getOwnTrooper(world, self, trooperType);
+			Trooper trooper = Utils.getOwnTrooperByType(world, self, trooperType);
 			if (trooper != null) {
 				return trooper;
 			}
@@ -57,26 +59,26 @@ public class Utils {
 	}
 	
 	public static Trooper getMedic(World world, Trooper self) {
-		return Utils.getOwnTrooper(world, self, TrooperType.FIELD_MEDIC);
+		return Utils.getOwnTrooperByType(world, self, TrooperType.FIELD_MEDIC);
 	}
 	
 	public static Trooper getSniper(World world, Trooper self) {
-		return Utils.getOwnTrooper(world, self, TrooperType.SNIPER);
+		return Utils.getOwnTrooperByType(world, self, TrooperType.SNIPER);
 	}
 	
 	public static Trooper getSoldier(World world, Trooper self) {
-		return Utils.getOwnTrooper(world, self, TrooperType.SOLDIER);
+		return Utils.getOwnTrooperByType(world, self, TrooperType.SOLDIER);
 	}
 	
 	public static Trooper getCommander(World world, Trooper self) {
-		return Utils.getOwnTrooper(world, self, TrooperType.COMMANDER);
+		return Utils.getOwnTrooperByType(world, self, TrooperType.COMMANDER);
 	}
 	
 	public static Trooper getScout(World world, Trooper self) {
-		return Utils.getOwnTrooper(world, self, TrooperType.SCOUT);
+		return Utils.getOwnTrooperByType(world, self, TrooperType.SCOUT);
 	}
 	
-	public static Trooper getOwnTrooper(World world, Trooper self, TrooperType type) {
+	public static Trooper getOwnTrooperByType(World world, Trooper self, TrooperType type) {
 		Trooper[] troopers = world.getTroopers();
 		for (Trooper trooper : troopers) {
 			if (self.getPlayerId() == trooper.getPlayerId()) {
@@ -88,13 +90,13 @@ public class Utils {
 		return null;
 	}
 	
-	public static Trooper getDamagedTrooper(World world, Trooper self) {
+	public static Trooper getOwnDamagedTrooper(World world, Trooper self) {
 		
 		TrooperType[] typesOrder = new TrooperType[] {TrooperType.SCOUT, TrooperType.COMMANDER, 
 				TrooperType.SNIPER, TrooperType.SOLDIER, TrooperType.FIELD_MEDIC};
 			
 		for (TrooperType trooperType : typesOrder) {
-			Trooper trooper = Utils.getOwnTrooper(world, self, trooperType);
+			Trooper trooper = Utils.getOwnTrooperByType(world, self, trooperType);
 			if (trooper != null && trooper.getHitpoints() < 100) {
 				return trooper;
 			}
@@ -114,7 +116,7 @@ public class Utils {
 		return enemies;
 	}
 	
-	public static List<Trooper> getTeam(World world, Trooper self) {
+	public static List<Trooper> getTeamTroopers(World world, Trooper self) {
 		Trooper[] troopers = world.getTroopers();
 		List<Trooper> team = new ArrayList<>();
 		for (Trooper trooper : troopers) {
@@ -143,37 +145,38 @@ public class Utils {
 			sea[trooper.getX()][trooper.getY()] = -1;
 		}
 		
-		// mark start and end
-		int wave = 1;
-		sea[self.getX()][self.getY()] = wave;
+		// mark target
 		sea[target.getX()][target.getY()] = 0;
+		sea[self.getX()][self.getY()] = 1;
 		
-		boolean running = true;
-		while(running) {
-			running = false;
-			for(int x = 0; x < world.getWidth(); x++) {
-				for (int y = 0; y < world.getHeight(); y++) {
-					if (sea[x][y] == wave) {
-						if (x < world.getWidth()-1 && sea[x+1][y] == 0) {
-							sea[x+1][y] = wave + 1;
-							running = true;
-						}
-						if (x > 0 && sea[x-1][y] == 0) {
-							sea[x-1][y] = wave + 1;
-							running = true;
-						}
-						if (y < world.getHeight()-1 && sea[x][y+1] == 0) {
-							sea[x][y+1] = wave + 1;
-							running = true;
-						}
-						if (y > 0 && sea[x][y-1] == 0) {
-							sea[x][y-1] = wave + 1;
-							running = true;
-						}
-					}
-				}
+		Queue<Point> points = new LinkedList<>();
+		points.offer(new Point(self.getX(), self.getY()));
+		
+		while(!points.isEmpty()) {
+
+			Point point = points.poll();
+
+			int x = point.getX();
+			int y = point.getY();
+			int value = sea[x][y];
+			
+			if (x < world.getWidth() - 1 && sea[x + 1][y] == 0) {
+				sea[x + 1][y] = value + 1;
+				points.offer(new Point(x + 1, y));
 			}
-			wave++;
+			if (x > 0 && sea[x - 1][y] == 0) {
+				sea[x - 1][y] = value + 1;
+				points.offer(new Point(x - 1, y));
+			}
+			if (y < world.getHeight()-1 && sea[x][y + 1] == 0) {
+				sea[x][y + 1] = value + 1;
+				points.offer(new Point(x, y + 1));
+			}
+			if (y > 0 && sea[x][y - 1] == 0) {
+				sea[x][y - 1] = value + 1;
+				points.offer(new Point(x, y - 1));
+			}
+
 		}
 		
 		int finishValue = sea[target.getX()][target.getY()];
@@ -258,7 +261,7 @@ public class Utils {
 		if (commander == null) {
 			return true;
 		}
-		List<Trooper> team = getTeam(world, self);
+		List<Trooper> team = getTeamTroopers(world, self);
 		boolean result = true;
 		for (Trooper trooper : team) {
 			if (self.getType() == commander.getType()) {
@@ -270,24 +273,20 @@ public class Utils {
 		return result;
 	}
 	
-	public static boolean trooperIsNear(Trooper damagedTrooper, Trooper self) {
-		if (Math.abs(damagedTrooper.getX() - self.getX()) <= 1 && damagedTrooper.getY() == self.getY()) {
+	public static boolean trooperIsNear(Trooper first, Trooper second) {
+		if (getDistance(first, second) <= 1) {
 			return true;
+		} else {
+			return false;
 		}
-		if (Math.abs(damagedTrooper.getY() - self.getY()) <= 1 && damagedTrooper.getX() == self.getX()) {
-			return true;
-		}
-		return false;
 	}
 	
-	public static boolean pointIsNear(Point point, Trooper self) {
-		if (Math.abs(point.getX() - self.getX()) <= 1 && point.getY() == self.getY()) {
+	public static boolean pointIsNear(Point point, Trooper trooper) {
+		if (getDistance(point, trooper) <= 1) {
 			return true;
+		} else {
+			return false;
 		}
-		if (Math.abs(point.getY() - self.getY()) <= 1 && point.getX() == self.getX()) {
-			return true;
-		}
-		return false;
 	}
 	
 	public static boolean isCellFree(Point p, World world) {
@@ -310,25 +309,25 @@ public class Utils {
 		return true;
 	}
 
-	public static Point getNearestCellWithBonus(Trooper self, World world, Game game, Move move) {
+	public static Point getNearestCellWithBonus(Trooper trooper, World world, Game game, Move move) {
 		Bonus[] bonuses = world.getBonuses();
 		for (Bonus bonus : bonuses) {
 			Point bonusPoint = new Point(bonus.getX(), bonus.getY()); 
-			if (pointIsNear(bonusPoint, self) && trooperDoesNotHaveBonus(self, bonus) && isCellFree(bonus.getX(), bonus.getY(), world)) {
+			if (pointIsNear(bonusPoint, trooper) && trooperDoesNotHaveBonus(trooper, bonus) && isCellFree(bonus.getX(), bonus.getY(), world)) {
 				return bonusPoint;
 			}
 		}
 		return null;
 	}
 
-	public static boolean trooperDoesNotHaveBonus(Trooper self, Bonus bonus) {
+	public static boolean trooperDoesNotHaveBonus(Trooper trooper, Bonus bonus) {
 		switch (bonus.getType()) {
 		case MEDIKIT:
-			return self.isHoldingMedikit() ? false : true;
+			return trooper.isHoldingMedikit() ? false : true;
 		case GRENADE:
-			return self.isHoldingGrenade() ? false : true;
+			return trooper.isHoldingGrenade() ? false : true;
 		case FIELD_RATION:
-			return self.isHoldingFieldRation() ? false : true;
+			return trooper.isHoldingFieldRation() ? false : true;
 		default:
 			return false;
 		}
@@ -374,49 +373,161 @@ public class Utils {
 		if (next != null && Utils.isCellFree(next, world) && Utils.ensureCommandBonus(trooper, world, game, next)) {
 			return next;
 		} else {
-			if (Math.abs(trooper.getX() - point.getX()) > Math.abs(trooper.getY() - point.getY())) {
-				return getNextPointX(trooper, world, point, 0);
-			} else {
-				return getNextPointY(trooper, world, point, 0);
-			}
+			return null;
 		}
 	}
 
-	public static Point getNextPointX(Trooper trooper, World world, Point point, int count) {
-		if (trooper.getX() - point.getX() > 0) {
-			if (Utils.isCellFree(trooper.getX() - 1, trooper.getY(), world) || count > 1) {
-				return new Point(trooper.getX() - 1, trooper.getY());
-			} else {
-				return getNextPointY(trooper, world, point, count + 1);
-			}
-		} else {
-			if (Utils.isCellFree(trooper.getX() + 1, trooper.getY(), world) || count > 1) {
-				return new Point(trooper.getX() + 1, trooper.getY());
-			} else {
-				return getNextPointY(trooper, world, point, count + 1);
+	public static Point getNearestFreeCell(Trooper self, World world, Game game, Point target) {
+		Point free = null;
+		int min = Integer.MAX_VALUE;
+		List<Point> points = getPointsInRadius(self, world, game, target, 2);
+		for (Point point : points) {
+			if (stepsFromTo(self, world, game, point) < min) {
+				free = point;
 			}
 		}
+		return free;
 	}
 
-	public static Point getNextPointY(Trooper trooper, World world, Point point, int count) {
-		if (trooper.getY() - point.getY() > 0) {
-			if (Utils.isCellFree(trooper.getX(), trooper.getY() - 1, world) || count > 1) {
-				return new Point(trooper.getX(), trooper.getY() - 1);
-			} else {
-				return getNextPointX(trooper, world, point, count + 1);
-			}
-		} else {
-			if (Utils.isCellFree(trooper.getX(), trooper.getY() + 1, world) || count > 1) {
-				return new Point(trooper.getX(), trooper.getY() + 1);
-			} else {
-				return getNextPointX(trooper, world, point, count + 1);
+	private static int stepsFromTo(Trooper self, World world, Game game, Point target) {
+		
+		int[][] sea = new int[world.getWidth()][world.getHeight()];
+		
+		// mark walls
+		for(int x = 0; x < world.getWidth(); x++) {
+			for (int y = 0; y < world.getHeight(); y++) {
+				if (world.getCells()[x][y] != CellType.FREE) {
+					sea[x][y] = -1;
+				}
 			}
 		}
+		
+		// mark units
+		for (Trooper trooper : world.getTroopers()) {
+			sea[trooper.getX()][trooper.getY()] = -1;
+		}
+		
+		// mark target
+		sea[target.getX()][target.getY()] = 0;
+		sea[self.getX()][self.getY()] = 1;
+		
+		Queue<Point> points = new LinkedList<>();
+		points.offer(new Point(self.getX(), self.getY()));
+		
+		while(!points.isEmpty()) {
+
+			Point point = points.poll();
+
+			int x = point.getX();
+			int y = point.getY();
+			int value = sea[x][y];
+			
+			if (x < world.getWidth() - 1 && sea[x + 1][y] == 0) {
+				sea[x + 1][y] = value + 1;
+				Point p = new Point(x + 1, y);
+				points.offer(p);
+				if (p.equals(target)) {
+					return value;
+				}
+			}
+			if (x > 0 && sea[x - 1][y] == 0) {
+				sea[x - 1][y] = value + 1;
+				Point p = new Point(x - 1, y);
+				points.offer(p);
+				if (p.equals(target)) {
+					return value;
+				}
+			}
+			if (y < world.getHeight()-1 && sea[x][y + 1] == 0) {
+				sea[x][y + 1] = value + 1;
+				Point p = new Point(x, y + 1);
+				points.offer(p);
+				if (p.equals(target)) {
+					return value;
+				}
+			}
+			if (y > 0 && sea[x][y - 1] == 0) {
+				sea[x][y - 1] = value + 1;
+				Point p = new Point(x, y - 1);
+				points.offer(p);
+				if (p.equals(target)) {
+					return value;
+				}
+			}
+
+		}
+		
+		return Integer.MAX_VALUE;
 	}
 
-	public static Point getNearestFreeCell(Trooper self, World world, Game game, Point point) {
-		// TODO Auto-generated method stub
-		return null;
+	private static List<Point> getPointsInRadius(Trooper self, World world, Game game, Point target, int r) {
+
+		int[][] sea = new int[world.getWidth()][world.getHeight()];
+		
+		// mark walls
+		for(int x = 0; x < world.getWidth(); x++) {
+			for (int y = 0; y < world.getHeight(); y++) {
+				if (world.getCells()[x][y] != CellType.FREE) {
+					sea[x][y] = -1;
+				}
+			}
+		}
+		
+		// mark units
+		for (Trooper trooper : world.getTroopers()) {
+			sea[trooper.getX()][trooper.getY()] = -1;
+		}
+		
+		// mark target
+		sea[target.getX()][target.getY()] = 1;
+		
+		List<Point> result = new ArrayList<>();
+		
+		Queue<Point> points = new LinkedList<>();
+		points.offer(new Point(self.getX(), self.getY()));
+		
+		while(!points.isEmpty()) {
+
+			Point point = points.poll();
+			result.add(point);
+			
+			int x = point.getX();
+			int y = point.getY();
+			int value = sea[x][y];
+			
+			if (x < world.getWidth() - 1 && sea[x + 1][y] == 0) {
+				sea[x + 1][y] = value + 1;
+				Point p = new Point(x + 1, y);
+				if (value + 1 <= r) {
+					points.offer(p);
+				}
+			}
+			if (x > 0 && sea[x - 1][y] == 0) {
+				sea[x - 1][y] = value + 1;
+				Point p = new Point(x - 1, y);
+				if (value + 1 <= r) {
+					points.offer(p);
+				}
+			}
+			if (y < world.getHeight()-1 && sea[x][y + 1] == 0) {
+				sea[x][y + 1] = value + 1;
+				Point p = new Point(x, y + 1);
+				if (value + 1 <= r) {
+					points.offer(p);
+				}
+			}
+			if (y > 0 && sea[x][y - 1] == 0) {
+				sea[x][y - 1] = value + 1;
+				Point p = new Point(x, y - 1);
+				if (value + 1 <= r) {
+					points.offer(p);
+				}
+			}
+
+		}
+		
+		return result;
+		
 	}
 
 	public static Trooper getHeadTrooper(World world, Trooper self) {
@@ -429,10 +540,80 @@ public class Utils {
 			if (trooperType == self.getType()) {
 				return head;
 			}
-			Trooper trooper = Utils.getOwnTrooper(world, self, trooperType);
+			Trooper trooper = Utils.getOwnTrooperByType(world, self, trooperType);
 			if (trooper != null) {
 				head = trooper;
 			}
+		}
+		
+		return head;
+	}
+
+	public static Point getNearestShootingPoint(Trooper self, World world, Game game, Trooper target) {
+
+		int[][] sea = new int[world.getWidth()][world.getHeight()];
+		
+		// mark walls
+		for(int x = 0; x < world.getWidth(); x++) {
+			for (int y = 0; y < world.getHeight(); y++) {
+				if (world.getCells()[x][y] != CellType.FREE) {
+					sea[x][y] = -1;
+				}
+			}
+		}
+		
+		// mark units
+		for (Trooper trooper : world.getTroopers()) {
+			sea[trooper.getX()][trooper.getY()] = -1;
+		}
+		
+		// mark self
+		sea[self.getX()][self.getY()] = 1;
+		
+		Queue<Point> points = new LinkedList<>();
+		points.offer(new Point(self.getX(), self.getY()));
+		
+		while(!points.isEmpty()) {
+
+			Point point = points.poll();
+
+			int x = point.getX();
+			int y = point.getY();
+			int value = sea[x][y];
+			
+			if (x < world.getWidth() - 1 && sea[x + 1][y] == 0) {
+				sea[x + 1][y] = value + 1;
+				Point p = new Point(x + 1, y);
+				points.offer(p);
+				if (world.isVisible(self.getShootingRange(), p.getX(), p.getY(), TrooperStance.STANDING, target.getX(), target.getY(), target.getStance())) {
+					return p;
+				}
+			}
+			if (x > 0 && sea[x - 1][y] == 0) {
+				sea[x - 1][y] = value + 1;
+				Point p = new Point(x - 1, y);
+				points.offer(p);
+				if (world.isVisible(self.getShootingRange(), p.getX(), p.getY(), TrooperStance.STANDING, target.getX(), target.getY(), target.getStance())) {
+					return p;
+				}
+			}
+			if (y < world.getHeight()-1 && sea[x][y + 1] == 0) {
+				sea[x][y + 1] = value + 1;
+				Point p = new Point(x, y + 1);
+				points.offer(p);
+				if (world.isVisible(self.getShootingRange(), p.getX(), p.getY(), TrooperStance.STANDING, target.getX(), target.getY(), target.getStance())) {
+					return p;
+				}
+			}
+			if (y > 0 && sea[x][y - 1] == 0) {
+				sea[x][y - 1] = value + 1;
+				Point p = new Point(x, y - 1);
+				points.offer(p);
+				if (world.isVisible(self.getShootingRange(), p.getX(), p.getY(), TrooperStance.STANDING, target.getX(), target.getY(), target.getStance())) {
+					return p;
+				}
+			}
+
 		}
 		
 		return null;

@@ -38,7 +38,7 @@ public class AttackTheArea implements ITeamStrategy {
 		actionChain.chain(new TryShoot());
 		
 		if (self.getType() == Utils.getMainTrooper(world, self).getType()) {
-			if (Utils.getDamagedTrooper(world, self) != null && Utils.getMedic(world, self) != null && Utils.getVisibleEnemies(world, self).isEmpty()) {
+			if (Utils.getOwnDamagedTrooper(world, self) != null && Utils.getMedic(world, self) != null && Utils.getVisibleEnemies(world, self).isEmpty()) {
 				if (self.getType() == TrooperType.FIELD_MEDIC) {
 					actionChain.chain(new TryHeal(self));
 				} else {
@@ -58,38 +58,37 @@ public class AttackTheArea implements ITeamStrategy {
 			List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
 			Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
 			if (nearestEnemy != null) {
-				actionChain.chain(new EndTurn());
+				Point shootingPoint = Utils.getNearestShootingPoint(self, world, game, nearestEnemy);
+				actionChain.chain(new TryMove(shootingPoint));
 			} else {
 				actionChain.chain(new TryMove(areaCenterPoint));
 			}
-		} else if (self.getType() == TrooperType.FIELD_MEDIC) {
-			Trooper damagedTrooper = Utils.getDamagedTrooper(world, self);
+		} 
+		
+		if (self.getType() == TrooperType.FIELD_MEDIC) {
+			Trooper damagedTrooper = Utils.getOwnDamagedTrooper(world, self);
 			if (damagedTrooper != null) {
 				if (Utils.trooperIsNear(damagedTrooper, self)) {
 					actionChain.chain(new TryHeal(damagedTrooper));
 				} else {
 					actionChain.chain(new TryMove(damagedTrooper));
 				}
-			} else {
-				Trooper commander = Utils.getMainTrooper(world, self);
-				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
-					actionChain.chain(new TryMove(commander));
-				} else {
-					actionChain.chain(new TryMove(areaCenterPoint));
-				}
 			}
+		} 
+		
+		List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
+		Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
+		if (nearestEnemy != null) {
+			Point shootingPoint = Utils.getNearestShootingPoint(self, world, game, nearestEnemy);
+			actionChain.chain(new TryMove(shootingPoint));
 		} else {
-			List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
-			Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
-			if (nearestEnemy != null) {
-				actionChain.chain(new TryMove(nearestEnemy));
+			Trooper commander = Utils.getMainTrooper(world, self);
+			if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
+				//Point freeCell = Utils.getNearestFreeCell(self, world, game, new Point(commander));
+				//actionChain.chain(new TryMove(freeCell));
+				actionChain.chain(new TryMove(commander));
 			} else {
-				Trooper commander = Utils.getMainTrooper(world, self);
-				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
-					actionChain.chain(new TryMove(commander));
-				} else {
-					actionChain.chain(new TryMove(areaCenterPoint));
-				}
+				actionChain.chain(new TryMove(areaCenterPoint));
 			}
 		}
 		
@@ -100,7 +99,7 @@ public class AttackTheArea implements ITeamStrategy {
 
 	private boolean allTroopersInArea(Trooper self, World world, Game game, Move move) {
 		boolean result = true;
-		List<Trooper> troopers = Utils.getTeam(world, self);
+		List<Trooper> troopers = Utils.getTeamTroopers(world, self);
 		for (Trooper trooper : troopers) {
 			if (Utils.getDistance(areaCenterPoint, trooper) > AREA_RADIUS) {
 				result = false;

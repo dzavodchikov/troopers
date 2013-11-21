@@ -29,7 +29,7 @@ public class TryMove implements IAction{
 		if (trooper != null) {
 			next = Utils.getNextPointToMove(self, world, game, new Point(trooper.getX(), trooper.getY()));
 		}
-		if (self.getActionPoints() >= Utils.getMoveCosts(self.getStance(), game)) {
+		if (next != null && self.getActionPoints() >= Utils.getMoveCosts(self.getStance(), game)) {
 			move.setAction(ActionType.MOVE);
 			move.setX(next.getX());
 			move.setY(next.getY());
