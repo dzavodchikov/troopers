@@ -1,12 +1,12 @@
 
 
-public class GameContext {
+public class TeamContext {
 
-	private static GameContext instance;
+	private static TeamContext instance;
 
 	private ITeamStrategy target;
 	
-	private GameContext() {
+	private TeamContext() {
 		
 	}
 	
@@ -18,9 +18,9 @@ public class GameContext {
 		this.target = target;
 	}
 
-	public static synchronized GameContext getInstance() {
+	public static synchronized TeamContext getInstance() {
 		if (instance == null) {
-			instance = new GameContext();
+			instance = new TeamContext();
 		}
 		return instance;
 	}

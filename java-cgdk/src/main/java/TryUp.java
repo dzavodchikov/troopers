@@ -12,7 +12,7 @@ public class TryUp implements IAction {
 	@Override
 	public boolean run(Trooper self, World world, Game game, Move move) {
 		if (self.getActionPoints() >= game.getStanceChangeCost() && self.getStance() != TrooperStance.STANDING) {
-			Trooper target = Utils.getWeakestTrooperInRange(self, world, game, move, self.getShootingRange(), self.getStance());
+			Trooper target = Utils.getWeakestVisibleTrooperInRange(self, world, game, move, self.getShootingRange(), self.getStance());
 			if (target == null) {
 				move.setAction(ActionType.RAISE_STANCE);
 				return true;

@@ -15,7 +15,7 @@ public class TryEatFieldRation implements IAction{
 	@Override
 	public boolean run(Trooper self, World world, Game game, Move move) {
 		if (self.getActionPoints() >= game.getFieldRationEatCost() && self.getActionPoints() <= 7 && self.isHoldingFieldRation()) {
-			Trooper target = Utils.getWeakestTrooperInRange(self, world, game, move, self.getShootingRange(), self.getStance());
+			Trooper target = Utils.getWeakestVisibleTrooperInRange(self, world, game, move, self.getShootingRange(), self.getStance());
 			if (target != null) {
 				move.setAction(ActionType.EAT_FIELD_RATION);
 				return true;

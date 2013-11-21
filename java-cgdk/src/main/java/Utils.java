@@ -40,7 +40,7 @@ public class Utils {
 		}
 	}
 
-	public static Trooper getMainTrooper(World world, Trooper self, EnumMap<TrooperType, Boolean> lockedTroopers) {
+	public static Trooper getMainTrooper(World world, Trooper self) {
 		
 		TrooperType[] typesOrder = new TrooperType[] {TrooperType.SCOUT, TrooperType.COMMANDER, 
 			TrooperType.SNIPER, TrooperType.SOLDIER, TrooperType.FIELD_MEDIC};
@@ -48,10 +48,7 @@ public class Utils {
 		for (TrooperType trooperType : typesOrder) {
 			Trooper trooper = Utils.getOwnTrooper(world, self, trooperType);
 			if (trooper != null) {
-				Boolean locked = lockedTroopers.get(trooper.getType());
-				if (locked == null || locked == false) {
-					return trooper;
-				}
+				return trooper;
 			}
 		}
 		
@@ -337,11 +334,24 @@ public class Utils {
 		}
 	}
 	
-	public static Trooper getWeakestTrooperInRange(Trooper self, World world, Game game, Move move, double range, TrooperStance stance) {
+	public static Trooper getWeakestVisibleTrooperInRange(Trooper self, World world, Game game, Move move, double range, TrooperStance stance) {
 		Trooper target = null;
 		List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
 		for (Trooper trooper : enemies) {
 			if (world.isVisible(range, self.getX(), self.getY(), stance, trooper.getX(), trooper.getY(), trooper.getStance())) {
+				if (target == null || target.getHitpoints() > trooper.getHitpoints()){
+					target = trooper;
+				}
+			}
+		}
+		return target;
+	}
+	
+	public static Trooper getWeakestTrooperInRange(Trooper self, World world, Game game, Move move, double range, TrooperStance stance) {
+		Trooper target = null;
+		List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
+		for (Trooper trooper : enemies) {
+			if (getDistance(self, trooper) <= range) {
 				if (target == null || target.getHitpoints() > trooper.getHitpoints()){
 					target = trooper;
 				}
@@ -406,6 +416,25 @@ public class Utils {
 
 	public static Point getNearestFreeCell(Trooper self, World world, Game game, Point point) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static Trooper getHeadTrooper(World world, Trooper self) {
+		TrooperType[] typesOrder = new TrooperType[] {TrooperType.SCOUT, TrooperType.COMMANDER, 
+				TrooperType.SNIPER, TrooperType.SOLDIER, TrooperType.FIELD_MEDIC};
+			
+		Trooper head = null;
+		
+		for (TrooperType trooperType : typesOrder) {
+			if (trooperType == self.getType()) {
+				return head;
+			}
+			Trooper trooper = Utils.getOwnTrooper(world, self, trooperType);
+			if (trooper != null) {
+				head = trooper;
+			}
+		}
+		
 		return null;
 	}
 	

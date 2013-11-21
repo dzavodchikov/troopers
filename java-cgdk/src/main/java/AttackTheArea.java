@@ -1,4 +1,3 @@
-import java.util.EnumMap;
 import java.util.List;
 
 import model.Game;
@@ -13,11 +12,8 @@ public class AttackTheArea implements ITeamStrategy {
 	
 	private Point areaCenterPoint;
 	
-	private EnumMap<TrooperType, Boolean> lockedTroopers;
-	
 	public AttackTheArea(Point nextPoint) {
 		this.areaCenterPoint = nextPoint;
-		this.lockedTroopers = new EnumMap<>(TrooperType.class);
 	}
 
 	@Override
@@ -37,10 +33,11 @@ public class AttackTheArea implements ITeamStrategy {
 		actionChain.chain(new TryThrowGrenade());
 		actionChain.chain(new TryEatFieldRation());
 		actionChain.chain(new TryUseMedkit());
+		//actionChain.chain(new TryHide());
 		actionChain.chain(new TryDown());
 		actionChain.chain(new TryShoot());
 		
-		if (self.getType() == Utils.getMainTrooper(world, self, lockedTroopers).getType()) {
+		if (self.getType() == Utils.getMainTrooper(world, self).getType()) {
 			if (Utils.getDamagedTrooper(world, self) != null && Utils.getMedic(world, self) != null && Utils.getVisibleEnemies(world, self).isEmpty()) {
 				if (self.getType() == TrooperType.FIELD_MEDIC) {
 					actionChain.chain(new TryHeal(self));
@@ -57,7 +54,7 @@ public class AttackTheArea implements ITeamStrategy {
 			actionChain.chain(new TryMove(bonusPoint));
 		}
 		
-		if (self.getType() == Utils.getMainTrooper(world, self, lockedTroopers).getType()) {
+		if (self.getType() == Utils.getMainTrooper(world, self).getType()) {
 			List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
 			Trooper nearestEnemy = Utils.getNearestTrooper(enemies, self);
 			if (nearestEnemy != null) {
@@ -74,7 +71,7 @@ public class AttackTheArea implements ITeamStrategy {
 					actionChain.chain(new TryMove(damagedTrooper));
 				}
 			} else {
-				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
+				Trooper commander = Utils.getMainTrooper(world, self);
 				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
 					actionChain.chain(new TryMove(commander));
 				} else {
@@ -87,7 +84,7 @@ public class AttackTheArea implements ITeamStrategy {
 			if (nearestEnemy != null) {
 				actionChain.chain(new TryMove(nearestEnemy));
 			} else {
-				Trooper commander = Utils.getMainTrooper(world, self, lockedTroopers);
+				Trooper commander = Utils.getMainTrooper(world, self);
 				if (commander != null && Utils.trooperCanMoveToTarget(self, world, game, commander, areaCenterPoint)) {
 					actionChain.chain(new TryMove(commander));
 				} else {

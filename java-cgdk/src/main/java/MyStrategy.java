@@ -13,7 +13,7 @@ public final class MyStrategy implements Strategy {
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
     	
-    	GameContext context = GameContext.getInstance();
+    	TeamContext context = TeamContext.getInstance();
     	
     	ITeamStrategy target = context.getTarget();
     	
