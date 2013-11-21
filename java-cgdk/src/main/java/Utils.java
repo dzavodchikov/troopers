@@ -484,7 +484,7 @@ public class Utils {
 		List<Point> result = new ArrayList<>();
 		
 		Queue<Point> points = new LinkedList<>();
-		points.offer(new Point(self.getX(), self.getY()));
+		points.offer(new Point(target.getX(), target.getY()));
 		
 		while(!points.isEmpty()) {
 
