@@ -619,4 +619,15 @@ public class Utils {
 		return null;
 	}
 	
+	public static int getShootingEnemyesCount(Trooper self, World world, Point point, TrooperStance stance) {
+		List<Trooper> enemies = Utils.getVisibleEnemies(world, self);
+		int count = 0;
+		for (Trooper enemy : enemies) {
+			if (world.isVisible(enemy.getShootingRange(), enemy.getX(), enemy.getY(), enemy.getStance(), point.getX(), point.getY(), stance)) {
+				count++;
+			}
+		}
+		return count;
+	}
+	
 }
